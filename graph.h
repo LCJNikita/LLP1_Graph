@@ -7,6 +7,7 @@
 
 #define MAX_NAME_LENGTH 50
 #define MAX_CHAR_VALUE 256
+#define MAX_NODE_RELATIONS 50
 
 enum DataType {
     INT32,
@@ -26,35 +27,39 @@ struct Column {
     };
 };
 
-struct Row {
-    int columnCount;
+struct Node {
     struct Column* columns;
+    int relationsCount;
+    int relations[MAX_NODE_RELATIONS];
 };
 
 struct GraphDB {
-    int rowCount;
-    int schemeCount;
+    int nodesCount;
+    int columnsCount;
     struct Column* scheme;
-    struct Row* rows;
+    struct Node* nodes;
 };
 
 // Utils
 void printHeaderGraphDB(struct GraphDB *db);
-void printRow(struct GraphDB *db, struct Row *row);
+void printNode(struct GraphDB *db, struct Node *node);
 void saveHeaderStructToFile(struct GraphDB* db, const char* fileName);
 void loadHeaderStructFromFile(struct GraphDB* db, const char* fileName);
 void movePointerToEndOfHeader(FILE* file);
-void addRowToFile(const char* fileName, struct Row* row);
-void setRowFromFile(FILE* file, struct Row* row, const int columnsCount);
-void iterateByEachRow(const char* fileName);
+void addNodeToFile(const char* fileName, struct Node* node);
+void iterateByEachNode(const char* fileName);
 size_t getFileSize(const char* fileName);
-bool parseAndSetRow(struct GraphDB* db, char* inputString, struct Row* setted_row);
+bool parseAndSetNode(struct GraphDB* db, char* inputString, struct Node* setted_node);
 void clearFileData(const char* fileName);
 
 // CRUD
-bool createRow(const char* fileName, char* inputString);
-void findRowById(const char* fileName, int index);
-void findRows(const char* fileName, const char* columnName, const char* columnValue);
-void updateRowById(const char* fileName, const char* columnName, const char* columnValue, int index);
+void setScheme(struct GraphDB* db, struct Column *scheme, int columnsCount);
+bool createNode(const char* fileName, char* inputString);
+void findNodeByIndex(const char* fileName, int index);
+void findNodes(const char* fileName, const char* columnName, const char* columnValue);
+void updateNodeByIndex(const char* fileName, const char* columnName, const char* columnValue, int index);
+
+void deleteNodeByIndex(const char* fileName, int index);
+void setNewRelation(const char* fileName, int index1, int index2);
 
 #endif // LLP1_GRAPH_H

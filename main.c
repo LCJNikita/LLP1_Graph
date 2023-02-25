@@ -1,18 +1,18 @@
 #include "graph.h"
 #include <string.h>
 
-// Установка схемы бд и сохранение ее в файл
+// Set scheme db and save it (header) to the file (Create file before!)
 //int main() {
 //	
 //	struct GraphDB db;
-//    db.rowCount = 0;
-//    db.schemeCount = 0;
-//    db.rows = NULL;
+//    db.nodesCount = 0;
+//    db.columnsCount = 0;
+//    db.nodes = NULL;
 //    db.scheme = NULL;
 //    
-//    int schemeCount = 4;
+//    int columnsCount = 4;
 //
-//    struct Column scheme[schemeCount];
+//    struct Column scheme[columnsCount];
 //    scheme[0].type = INT32;
 //    strncpy(scheme[0].name, "Age\0", MAX_NAME_LENGTH);
 //    
@@ -25,14 +25,14 @@
 //    scheme[3].type = BOOL;
 //    strncpy(scheme[3].name, "isAdult\0", MAX_NAME_LENGTH);
 //    
-//    setScheme(&db, scheme, schemeCount);
+//    setScheme(&db, scheme, columnsCount);
 //    
 //    saveHeaderStructToFile(&db, "data.bin");
 //    
 //    return 0;
 //}
 
-// Чтение хедера бд
+// Reading header
 //int main() {
 //	
 //	struct GraphDB db;
@@ -42,71 +42,75 @@
 //    return 0;
 //}
 
-// Проверка принта row
+// Check node printing
 //int main() {
 //	
 //	struct GraphDB db;
 //   	loadHeaderStructFromFile(&db, "data.bin");
 //
-//	struct Row row;
-//	parseAndSetRow(&db, "10000,228.56,nikita aboba,true", &row);
-//	printRow(&db, &row);
+//	struct Node node;
+//	parseAndSetNode(&db, "10000,228.56,nikita aboba,true", &node);
+//	printNode(&db, &node);
 //    
 //    return 0;
 //}
 
-// Добавление row в файл
+// Adding row to the file
 //int main() {
 //	
 //	struct GraphDB db;
 //   	loadHeaderStructFromFile(&db, "data.bin");
 //   	
-//   	struct Row row;
-//	parseAndSetRow(&db, "222,131.12,thelastofus,false", &row);
+//   	struct Node node;
+//	parseAndSetNode(&db, "222,131.12,myname,false", &node);
 //
 ////	printRow(&db, &row);
 //	
 //	printf("file size BEFORE ADD %d\n", (int)getFileSize("data.bin"));
 //	
-//	addRowToFile("data.bin", &row);
+//	addNodeToFile("data.bin", &node);
 //
 //	printf("file size AFTER ADD %d\n", (int)getFileSize("data.bin"));
 //    
 //    return 0;
 //}
 
-// Пример использования функции findRowById
+// Example how use findRNodeByIndex
 //int main() {
 //	
 //	struct GraphDB db;
 //   	loadHeaderStructFromFile(&db, "data.bin");
 //   	printHeaderGraphDB(&db);
 //   	
-//   	findRowById("data.bin", 8);
+//   	findNodeByIndex("data.bin", 1);
 //    
 //    return 0;
 //}
 
-// Принтим каждую row из файла
+// Print each node in db
 int main() {
 	
-	iterateByEachRow("data.bin");
+	struct GraphDB db;
+   	loadHeaderStructFromFile(&db, "data.bin");
+   	printHeaderGraphDB(&db);
+   	
+	iterateByEachNode("data.bin");
     
     return 0;
 }
 
-// Пример использования функции createRow
+// Example how use createNode
 //int main() {
 //	
-//	bool createRowResult1 = createRow("data.bin", "10000,228.56,nikita123,true");
-//	if (createRowResult1) {
+//	bool createNodeResult1 = createNode("data.bin", "10000,228.56,nikita,false");
+//	if (createNodeResult1) {
 //		printf("Adding createRowResult1 success\n");
 //	} else {
 //		printf("Adding createRowResult1 failure\n");
 //	}
 //	
-//	bool createRowResult2 = createRow("data.bin", "123, kek");
-//	if (createRowResult2) {
+//	bool createNodeResult2 = createNode("data.bin", "123, kek");
+//	if (createNodeResult2) {
 //		printf("Adding createRowResult2 success\n");
 //	} else {
 //		printf("Adding createRowResult2 failure\n");
@@ -115,30 +119,53 @@ int main() {
 //    return 0;
 //}
 
-// Пример использования findRows
+// Example how use findNodes
 //int main() {
 //	
-//	iterateByEachRow("data.bin");
+//	iterateByEachNode("data.bin");
 //	printf("\n");
 //	
-//	findRows("data.bin", "isAdult", "false");
+//	findNodes("data.bin", "Name", "nikita123");
 //    
 //    return 0;
 //}
 
-// Пример использования updateRowById
+// Example how use updateNodeByIndex
 //int main() {
 //	
-//	iterateByEachRow("data.bin");
+//	iterateByEachNode("data.bin");
 //	printf("\n");
 //	
-////	updateRowById("data.bin", "Name", "new_nikita_name", 7);
+//	updateNodeByIndex("data.bin", "Name", "new_nikita_name", 1);
 //    
 //    return 0;
 //}
 
+// Example how use deleteNodeByIndex
+//int main() {
+//	
+//	printf("before deleting: %d\n", getFileSize("data.bin"));
+//	deleteNodeByIndex("data.bin", 0);
+//	printf("after deleting: %d\n", getFileSize("data.bin"));
+//    
+//    return 0;
+//}
 
+// clear file data
+//int main() {
+//	
+//	clearFileData("data.bin");
+//	
+//	return 0;
+//}
 
+// Example of adding relations
+//int main() {
+//	
+//	setNewRelation("data.bin", 0, 1);
+//	
+//	return 0;
+//}
 
 
 
