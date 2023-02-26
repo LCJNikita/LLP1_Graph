@@ -87,22 +87,10 @@
 //    return 0;
 //}
 
-// Print each node in db
-int main() {
-	
-	struct GraphDB db;
-   	loadHeaderStructFromFile(&db, "data.bin");
-   	printHeaderGraphDB(&db);
-   	
-	iterateByEachNode("data.bin");
-    
-    return 0;
-}
-
 // Example how use createNode
 //int main() {
 //	
-//	bool createNodeResult1 = createNode("data.bin", "10000,228.56,nikita,false");
+//	bool createNodeResult1 = createNode("data.bin", "10000,228.56,maxim,false");
 //	if (createNodeResult1) {
 //		printf("Adding createRowResult1 success\n");
 //	} else {
@@ -162,14 +150,32 @@ int main() {
 // Example of adding relations
 //int main() {
 //	
-//	setNewRelation("data.bin", 0, 1);
+//	setNewRelation("data.bin", 1, 1);
+//	
+//	return 0;
+//}
+
+// Example of clearAllRelationsOfNode
+//int main() {
+//	
+//	clearAllRelationsOfNode("data.bin", 3);
 //	
 //	return 0;
 //}
 
 
 
-
+// Print each node in db
+int main() {
+	
+	struct GraphDB db;
+   	loadHeaderStructFromFile(&db, "data.bin");
+   	printHeaderGraphDB(&db);
+   	
+	iterateByEachNode("data.bin");
+    
+    return 0;
+}
 
 
 

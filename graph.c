@@ -792,7 +792,6 @@ void setNewRelation(const char* fileName, int index1, int index2) {
 	setNodeFromFile(file, &node2, db.columnsCount);
 	 
 	// проверка, что не использованы все 50 соединений
-	
 	if (node1.relationsCount == 50) {
 		printf("NewRelation Error: node1 has max relations\n");
 		return;
@@ -845,6 +844,103 @@ void setNewRelation(const char* fileName, int index1, int index2) {
 	fseek(file, nodeSize * index2, SEEK_CUR);
 	
 	writeNodeToFile(file, &node2, db.columnsCount);
+	
+	fclose(file);
+}
+
+// index1 - node where drop relation
+// index2 - drop index
+// function helper, when we update relations or delete some nodes
+void dropRelation(const char* fileName, int index1, int index2) {
+	
+	struct GraphDB db;
+	loadHeaderStructFromFile(&db, fileName);
+
+	if (index1 < 0 || index2 < 0) {
+		printf("DropRelation Error: Invalid index\n");
+		return;
+	} else if (db.nodesCount == 0) {
+		printf("DropRelation Error: db is empty\n");
+		return;
+	} else if (db.nodesCount - 1 < index1 || db.nodesCount - 1 < index2) {
+		printf("DropRelation Error: Out if range\n");
+		return;
+	} else if (index1 == index2) {
+		printf("DropRelation Error: indexes are equal\n");
+		return;
+	}
+	
+	int nodeSize = (int)sizeof(struct Column) * db.columnsCount + (int)sizeof(int) + (int)sizeof(int) * MAX_NODE_RELATIONS;
+	
+	FILE* file = fopen(fileName, "rb+");
+	movePointerToEndOfHeader(file);
+	fseek(file, nodeSize * index1, SEEK_CUR);
+	
+	struct Node node;
+	setNodeFromFile(file, &node, db.columnsCount);
+	fseek(file, -(nodeSize), SEEK_CUR);
+	
+	node.relationsCount = node.relationsCount - 1;
+	
+	int j;
+    for (j = 0; j < MAX_NODE_RELATIONS; j++) {
+    	if (node.relations[j] == index2) {
+    		node.relations[j] = -1;
+		}
+	}
+	
+	writeNodeToFile(file, &node, db.columnsCount);
+	
+	fclose(file);
+}
+
+void clearAllRelationsOfNode(const char* fileName, int index) {
+	
+	struct GraphDB db;
+	loadHeaderStructFromFile(&db, fileName);
+	
+	if (index < 0) {
+		printf("ClearRelation Error: Invalid index\n");
+		return;
+	} else if (db.nodesCount == 0) {
+		printf("ClearRelation Error: db is empty\n");
+		return;
+	} else if (db.nodesCount - 1 < index) {
+		printf("ClearRelation Error: Out if range\n");
+		return;
+	}
+	
+	int nodeSize = (int)sizeof(struct Column) * db.columnsCount + (int)sizeof(int) + (int)sizeof(int) * MAX_NODE_RELATIONS;
+	
+	FILE* file = fopen(fileName, "rb+");
+	movePointerToEndOfHeader(file);
+	fseek(file, nodeSize * index, SEEK_CUR);
+	
+	struct Node node;
+	setNodeFromFile(file, &node, db.columnsCount);
+	if (node.relationsCount == 0) {
+		printf("ClearRelation: node has zero relations");
+		fclose(file);
+		return;
+	}
+	fseek(file, -(nodeSize), SEEK_CUR);
+	
+	// drop relations in other nodes
+	int k;
+    for (k = 0; k < MAX_NODE_RELATIONS; k++) {
+    	if (node.relations[k] != -1) {
+    		dropRelation("data.bin", node.relations[k], index);
+		}
+	}
+	
+	// update current node with zero relations
+	node.relationsCount = 0;
+	int j;
+    for (j = 0; j < MAX_NODE_RELATIONS; j++) {
+    	node.relations[j] = -1;
+	}
+	
+	writeNodeToFile(file, &node, db.columnsCount);
 	
 	fclose(file);
 }

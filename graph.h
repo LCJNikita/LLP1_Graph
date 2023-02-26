@@ -61,5 +61,6 @@ void updateNodeByIndex(const char* fileName, const char* columnName, const char*
 
 void deleteNodeByIndex(const char* fileName, int index);
 void setNewRelation(const char* fileName, int index1, int index2);
+void clearAllRelationsOfNode(const char* fileName, int index);
 
 #endif // LLP1_GRAPH_H
