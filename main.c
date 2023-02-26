@@ -90,7 +90,7 @@
 // Example how use createNode
 //int main() {
 //	
-//	bool createNodeResult1 = createNode("data.bin", "10000,228.56,maxim,false");
+//	bool createNodeResult1 = createNode("data.bin", "10000,228.56,leonid,false");
 //	if (createNodeResult1) {
 //		printf("Adding createRowResult1 success\n");
 //	} else {
@@ -133,7 +133,7 @@
 //int main() {
 //	
 //	printf("before deleting: %d\n", getFileSize("data.bin"));
-//	deleteNodeByIndex("data.bin", 0);
+//	deleteNodeByIndex("data.bin", 2);
 //	printf("after deleting: %d\n", getFileSize("data.bin"));
 //    
 //    return 0;
@@ -150,7 +150,7 @@
 // Example of adding relations
 //int main() {
 //	
-//	setNewRelation("data.bin", 1, 1);
+//	setNewRelation("data.bin", 1, 3);
 //	
 //	return 0;
 //}
@@ -158,7 +158,7 @@
 // Example of clearAllRelationsOfNode
 //int main() {
 //	
-//	clearAllRelationsOfNode("data.bin", 3);
+//	clearAllRelationsOfNode("data.bin", 2);
 //	
 //	return 0;
 //}

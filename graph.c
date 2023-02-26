@@ -698,10 +698,6 @@ void deleteNodeByIndex(const char* fileName, int index) {
 	FILE* file = fopen(fileName, "rb+");
 	movePointerToEndOfHeader(file);
 	
-	fseek(file, -sizeof(int), SEEK_CUR);
-	int newNodesCount = db.nodesCount - 1;
-	fwrite(&newNodesCount, sizeof(int), 1, file);
-	
 	printf("current offset: %d\n", ftell(file));
 	
 	int headerSize = ftell(file);
@@ -714,32 +710,69 @@ void deleteNodeByIndex(const char* fileName, int index) {
 	} else if (db.nodesCount - 1 == index) {
 		// remove without replacing (if delete last element)
 		printf("HERE db.nodesCount - 1 == index \n");
-		int newFileSize = headerSize + nodeSize * (db.nodesCount - 1);
-		ftruncate(fileno(file), newFileSize);
-	} else {
-		printf("HERE deleting with replacing \n");
 		
-		// надо сместиться к последней node, записать ее
+		// надо сместиться к последней node, которую будем удалять
 		fseek(file, -nodeSize, SEEK_END);
 		struct Node lastNode;
 		setNodeFromFile(file, &lastNode, db.columnsCount);
 		
-		// потом сместиться к node, которую хотим удалить, записать туда последнюю
+		// удаляем связи у других nodes перед удалением самой ноды
+		int k;
+    	for (k = 0; k < MAX_NODE_RELATIONS; k++) {
+	    	if (lastNode.relations[k] != -1) {
+	    		dropRelation("data.bin", lastNode.relations[k], index);
+			}
+		}
+		
+		int newFileSize = headerSize + nodeSize * (db.nodesCount - 1);
+		ftruncate(fileno(file), newFileSize);
+		
+	} else {
+		printf("HERE deleting with replacing \n");
+		
+		// смещаемся к node, которую хотим удалить, чтобы удалять связи
+		fseek(file, nodeSize * index, SEEK_CUR);
+		struct Node deletingNode;
+		setNodeFromFile(file, &deletingNode, db.columnsCount);
+		
+		// Удаляем связи
+		int i;
+    	for (i = 0; i < MAX_NODE_RELATIONS; i++) {
+	    	if (deletingNode.relations[i] != -1) {
+	    		dropRelation("data.bin", deletingNode.relations[i], index);
+			}
+		}
+		
+		// затем смещаемся к последней node, чтобы записать ее
+		fseek(file, -nodeSize, SEEK_END);
+		struct Node lastNode;
+		setNodeFromFile(file, &lastNode, db.columnsCount);
+		
+		int lastIndex = db.nodesCount - 1;
+		
+		int k;
+    	for (k = 0; k < MAX_NODE_RELATIONS; k++) {
+	    	if (lastNode.relations[k] != -1) {
+	    		updateRelation("data.bin", lastNode.relations[k], lastIndex, index);
+			}
+		}
+		
+		// Теперь записываем сюда последнюю node
 		fseek(file, 0, SEEK_SET);
 		movePointerToEndOfHeader(file);
 		fseek(file, nodeSize * index, SEEK_CUR);
-		
-		int i;
-	    for (i = 0; i < db.columnsCount; i++) {
-	    	fwrite(&lastNode.columns[i], sizeof(struct Column), 1, file);
+		int j;
+	    for (j = 0; j < db.columnsCount; j++) {
+	    	fwrite(&lastNode.columns[j], sizeof(struct Column), 1, file);
 	    }
 	    
+	    // связи останутся те же (выше - обновили у других nodes связь)
 	    int relationsCount = lastNode.relationsCount;
 	    fwrite(&relationsCount, sizeof(int), 1, file);
 	    
-	    int k;
-	    for (k = 0; k < MAX_NODE_RELATIONS; k++) {
-	    	int relationValue = lastNode.relations[k];
+	    int a;
+	    for (a = 0; a < MAX_NODE_RELATIONS; a++) {
+	    	int relationValue = lastNode.relations[a];
 	    	fwrite(&relationValue, sizeof(int), 1, file);
 	    }
 			
@@ -747,6 +780,12 @@ void deleteNodeByIndex(const char* fileName, int index) {
 		int newFileSize = headerSize + nodeSize * (db.nodesCount - 1);
 		ftruncate(fileno(file), newFileSize);
 	}
+	
+	fseek(file, 0, SEEK_SET);
+	movePointerToEndOfHeader(file);
+	fseek(file, -sizeof(int), SEEK_CUR);
+	int newNodesCount = db.nodesCount - 1;
+	fwrite(&newNodesCount, sizeof(int), 1, file);
 	
 	fclose(file);
 }
@@ -886,6 +925,51 @@ void dropRelation(const char* fileName, int index1, int index2) {
     for (j = 0; j < MAX_NODE_RELATIONS; j++) {
     	if (node.relations[j] == index2) {
     		node.relations[j] = -1;
+		}
+	}
+	
+	writeNodeToFile(file, &node, db.columnsCount);
+	
+	fclose(file);
+}
+
+// index1 - node where update relation
+// oldIndex
+// newIndex
+// function helper, when we delete some nodes
+void updateRelation(const char* fileName, int index, int oldIndex, int newIndex) {
+	
+	struct GraphDB db;
+	loadHeaderStructFromFile(&db, fileName);
+
+	if (index < 0 || oldIndex < 0 || newIndex < 0) {
+		printf("DropRelation Error: Invalid index\n");
+		return;
+	} else if (db.nodesCount == 0) {
+		printf("DropRelation Error: db is empty\n");
+		return;
+	} else if (db.nodesCount - 1 < index || db.nodesCount - 1 < oldIndex || db.nodesCount - 1 < newIndex) {
+		printf("DropRelation Error: Out if range\n");
+		return;
+	} else if (index == oldIndex || index == newIndex || oldIndex == newIndex) {
+		printf("DropRelation Error: indexes are equal\n");
+		return;
+	}
+	
+	int nodeSize = (int)sizeof(struct Column) * db.columnsCount + (int)sizeof(int) + (int)sizeof(int) * MAX_NODE_RELATIONS;
+	
+	FILE* file = fopen(fileName, "rb+");
+	movePointerToEndOfHeader(file);
+	fseek(file, nodeSize * index, SEEK_CUR);
+	
+	struct Node node;
+	setNodeFromFile(file, &node, db.columnsCount);
+	fseek(file, -(nodeSize), SEEK_CUR);
+	
+	int j;
+    for (j = 0; j < MAX_NODE_RELATIONS; j++) {
+    	if (node.relations[j] == oldIndex) {
+    		node.relations[j] = newIndex;
 		}
 	}
 	
