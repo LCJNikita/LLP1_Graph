@@ -743,6 +743,9 @@ void deleteNodeByIndex(const char* fileName, int index) {
 			}
 		}
 		
+		fclose(file);
+		file = fopen(fileName, "rb+");
+		
 		// затем смещаемся к последней node, чтобы записать ее
 		fseek(file, -nodeSize, SEEK_END);
 		struct Node lastNode;
